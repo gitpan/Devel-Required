@@ -3,7 +3,7 @@ package Devel::Required;
 # Make sure we have version info for this module
 # Make sure we do everything by the book from now on
 
-$VERSION = '0.03';
+$VERSION = '0.04';
 use strict;
 
 # Initialize the list with text-file conversion
@@ -138,15 +138,27 @@ sub _convert {
 
 #  If we found and replaced the text and it's different now
 #   If there was no change (no action)
-#   Elseif we can open the file for writing
+#   Elseif we can open the temporary file for writing
 #    Write the new contents in there
 #    Close the output handle
 
         if (s#$before(?:.*?)$after#$before$text$after#s) {
             if ($_ eq $contents) {
-            } elsif (open( OUT,">$filename" )) {
+            } elsif (open( OUT,">$filename.tmp" )) {
                 print OUT $_;
                 close OUT;
+
+#    If the temporary has the right length
+#     Install the temp file over the original file, warn if failed
+#    Else
+#     Just warn that we couldn't write the temp file
+
+                if (-s "$filename.tmp" == length) {
+                    warn qq{Could not install "$filename.tmp" as "$filename"\n}
+                     unless rename "$filename.tmp",$filename;
+                } else {
+                    warn qq{Could not write "$filename.tmp", "$filename" not updated\n};
+                }
 
 #   Else (could not open file for writing)
 #    Just warn
@@ -156,13 +168,13 @@ sub _convert {
 #  Just warn
 
             } else {
-                warn "Could not open $filename for writing: $!\n";
+                warn qq{Could not open "$filename" for writing: $!\n};
             }
         } else {
-            warn "Could not find text marker in $filename\n";
+            warn qq{Could not find text marker in "$filename"\n};
         }
     } else {
-        warn "Could not open $filename for reading: $!\n";
+        warn qq{Could not open "$filename" for reading: $!\n};
     }
 } #_convert
 

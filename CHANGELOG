@@ -1,3 +1,7 @@
+0.04	7 January 2004
+	Made the updating of files a little more secure after presentation at
+	the Amsterdam PM Meeting.
+
 0.03	4 January 2004
 	Added option to specify which text and pod files to check and possibly
 	update.  Suggested by Dan Browning.  Added documentation for these new
