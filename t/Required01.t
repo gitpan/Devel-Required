@@ -130,5 +130,6 @@ EOD
     ok( close IN, "Failed to close Foo.pm: $!" );
 }
 
-is( unlink( qw(README Makefile),map {"$_.pm"} qw(Foo Bar Baz) ),'5',
- "Check if all files removed" );
+my @file = (qw(README Makefile),map {"$_.pm"} qw(Foo Bar Baz));
+is( unlink( @file ),scalar @file, "Check if all files removed" );
+1 while unlink @file; # multiversioned filesystems

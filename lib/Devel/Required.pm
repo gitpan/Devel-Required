@@ -3,7 +3,7 @@ package Devel::Required;
 # Make sure we have version info for this module
 # Make sure we do everything by the book from now on
 
-$VERSION = '0.05';
+$VERSION = '0.06';
 use strict;
 
 # Initialize the list with text-file conversion
@@ -53,7 +53,7 @@ BEGIN {
 #    Initialize the text to insert
 #    Make sure there is something there
 
-        $text = join( "\n",
+        $text = join( $/,
          map {" $_ (".($modules->{$_} || 'any').")"}
           sort {lc $a cmp lc $b} keys %{$modules} )
            if $modules;
@@ -65,10 +65,10 @@ BEGIN {
 #     Convert the pod-file if there is one
 
         foreach (@TEXT ? @TEXT : 'README') {
-            _convert( $_,"Required Modules:\n",$text,"\n\n" ) if -e;
+            _convert( $_,"Required Modules:$/",$text,"$/$/" ) if -e;
         }
         foreach (@POD ? @POD : ($pod ? ($pod) : ())) {
-            _convert( $_,"=head1 REQUIRED MODULES\n","\n$text\n","\n=" ) if -e;
+            _convert( $_,"=head1 REQUIRED MODULES$/","$/$text$/","$/=" ) if -e;
         }
     };
 } #BEGIN

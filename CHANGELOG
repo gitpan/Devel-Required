@@ -1,3 +1,10 @@
+0.06	8 february 2004
+	Adapted check in source test from \n to use $/.  Hopefully this should
+	solve the problems with Win32 platforms.
+
+	28 January 2004
+	Made sure the test-suite cleans up on multi-versioned systems.
+
 0.05	15 January 2004
 	Removed the temporary file creation logic, as it was messing up my
 	symlinks structure.
