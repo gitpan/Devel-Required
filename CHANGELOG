@@ -1,3 +1,7 @@
+0.05	15 January 2004
+	Removed the temporary file creation logic, as it was messing up my
+	symlinks structure.
+
 0.04	7 January 2004
 	Made the updating of files a little more secure after presentation at
 	the Amsterdam PM Meeting.
