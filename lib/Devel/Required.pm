@@ -3,7 +3,7 @@ package Devel::Required;
 # Make sure we have version info for this module
 # Make sure we do everything by the book from now on
 
-$VERSION = '0.01';
+$VERSION = '0.02';
 use strict;
 
 # While we're compiling
@@ -46,13 +46,12 @@ BEGIN {
 
 #    Initialize the text to insert
 #    Make sure there is something there
-#    Add final newline
 
         $text = join( "\n",
-         map {" $_ (".($modules->{$_} || 'any').")"} sort keys %{$modules} )
-          if $modules;
+         map {" $_ (".($modules->{$_} || 'any').")"}
+          sort {lc $a cmp lc $b} keys %{$modules} )
+           if $modules;
         $text ||= " (none)";
-#        $text .= "\n";
 
 #    Convert the README file if there is one
 #    Convert the main perl module if there is supposed to be one
@@ -141,7 +140,7 @@ Devel::Required - Automatic update of required modules documentation
 
 The Devel::Required module only serves a purpose in the development environment
 of an author of a CPAN module (or more precisely: a user of the
-L<ExtUtils::MakeMaker> module.  It makes sure that any changes to the
+L<ExtUtils::MakeMaker> module).  It makes sure that any changes to the
 required modules specified in the Makefile.PL are automatically reflected
 in the README file and in the main source file (if implicitely specified).
 
@@ -171,7 +170,6 @@ above will be changed to:
   Foo (1.0)                   <- added
   Bar::Baz (0.05)             <- added
                               <- empty line
-                              <- another empty line
 
 No changes will be made if the marker text is not found.
 
