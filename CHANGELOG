@@ -1,3 +1,8 @@
+0.03	4 January 2004
+	Added option to specify which text and pod files to check and possibly
+	update.  Suggested by Dan Browning.  Added documentation for these new
+	features and some more tests.
+
 0.02	29 December 2003
 	Some pod and debug statement updates.
 

@@ -3,8 +3,14 @@ package Devel::Required;
 # Make sure we have version info for this module
 # Make sure we do everything by the book from now on
 
-$VERSION = '0.02';
+$VERSION = '0.03';
 use strict;
+
+# Initialize the list with text-file conversion
+# Initialize the list with pod-file conversion
+
+my @TEXT;
+my @POD;
 
 # While we're compiling
 #  Make sure we can redefine without problems
@@ -53,16 +59,56 @@ BEGIN {
            if $modules;
         $text ||= " (none)";
 
-#    Convert the README file if there is one
-#    Convert the main perl module if there is supposed to be one
+#    For all of the text-files to convert
+#     Convert the text-file if there is one
+#    For all of the text-files to convert
+#     Convert the pod-file if there is one
 
-        _convert( 'README',"Required Modules:\n",$text,"\n\n" )
-         if -e 'README';
-        _convert( $pod,"=head1 REQUIRED MODULES\n","\n$text\n","\n=" )
-         if $pod and -e $pod;
- 
+        foreach (@TEXT ? @TEXT : 'README') {
+            _convert( $_,"Required Modules:\n",$text,"\n\n" ) if -e;
+        }
+        foreach (@POD ? @POD : ($pod ? ($pod) : ())) {
+            _convert( $_,"=head1 REQUIRED MODULES\n","\n$text\n","\n=" ) if -e;
+        }
     };
 } #BEGIN
+
+#---------------------------------------------------------------------------
+
+# Standard Perl features
+
+#---------------------------------------------------------------------------
+#  IN: 1 class (ignored)
+#      2..N key/value pairs
+
+sub import {
+
+# Lose the class
+# While there are parameters to be handled
+#  Obtain the type and value to set
+#  If it is a text-file to set
+#   Set that
+#  Elseif it is a text-file to set
+#   Set that
+#  Else (what?)
+#   Croak
+
+    shift;
+    while (@_) {
+        my ($type,$file) = (shift,shift);
+        if ($type eq 'text') {
+            push @TEXT,ref( $file ) ? @{$file} : ($file);
+        } elsif ($type eq 'pod') {
+            push @POD,ref( $file ) ? @{$file} : ($file);
+        } else {
+            die qq{Don't know how to handle "$type"\n};
+        }
+    }
+} #import
+
+#---------------------------------------------------------------------------
+
+# Internal subroutines
 
 #---------------------------------------------------------------------------
 # _convert
@@ -77,8 +123,10 @@ BEGIN {
 sub _convert {
 
 # Obtain the parameters
+# Make sure we have a local copy of $_
 
     my ($filename,$before,$text,$after) = @_;
+    local $_;
 
 # If we can read the file
 #  Obtain the entire contents of the file
@@ -118,6 +166,10 @@ sub _convert {
     }
 } #_convert
 
+# Satisfy -require-
+
+1;
+
 #---------------------------------------------------------------------------
 
 __END__
@@ -128,8 +180,16 @@ Devel::Required - Automatic update of required modules documentation
 
 =head1 SYNOPSIS
 
- use ExtUtils::MakeMaker;
- eval "use Devel::Required"; # auto-update documentation if needed
+ use ExtUtils::MakeMaker; # check README and lib/Your/Module.pm
+ eval "use Devel::Required";
+ WriteMakefile (
+  NAME         => "Your::Module",
+  VERSION_FROM => "lib/Your/Module.pm",
+  PREREQ_PM    => { 'Foo' => '1.0', 'Bar::Baz' => '0.05' }
+ );
+
+ use ExtUtils::MakeMaker; # specify which files should be checked
+ eval "use Devel::Required text => 'INSTALL', pod => [qw(lib/Your/Module.pod)]"
  WriteMakefile (
   NAME         => "Your::Module",
   VERSION_FROM => "lib/Your/Module.pm",
@@ -142,28 +202,31 @@ The Devel::Required module only serves a purpose in the development environment
 of an author of a CPAN module (or more precisely: a user of the
 L<ExtUtils::MakeMaker> module).  It makes sure that any changes to the
 required modules specified in the Makefile.PL are automatically reflected
-in the README file and in the main source file (if implicitely specified).
+in the appropriate text file and in the appropriate source files (either
+explicitely or implicitely specified).
 
-It takes the information given with the PREREQ_PM parameter and writes this to
-the README file, as well as to the POD of the file specified with the
-VERSION_FROM parameter.
+It takes the information given with the PREREQ_PM parameter and by default
+writes this to the README file, as well as to the POD of the file specified
+with the VERSION_FROM parameter.  Both these defaults can be overridden with
+the "text" and "pod" parameters in the C<use Devel::Required> specification.
 
 This module should B<only> be installed on the system of the developer.
 
-The following files will be changed:
+=head1 FILES CHANGED
+
+By default the following types of files will be changed:
 
 =over 2
 
-=item README
+=item text file
 
-The README file should exists in the current directory.  It should at least
-have this marker text:
+A text file should at least have this marker text:
 
  Required Modules:            <- must start at beginning of line
                               <- empty line
                               <- another empty line
 
-After Makefile.PL is executed (using the example of the L<SYNOPSIS>, the
+After Makefile.PL is executed (using the example of the L<SYNOPSIS>), the
 above will be changed to:
 
  Required Modules:            <- must start at beginning of line
@@ -173,9 +236,12 @@ above will be changed to:
 
 No changes will be made if the marker text is not found.
 
-=item Module file
+If no "text" file specification is specified, then the file "README" in the
+current directory will be assumed.
 
-The file indicated with the "VERSION_FROM" parameter, will be searched for
+=item pod file
+
+The pod file(s) that are (implicitely) specified, will be searched for
 a marker text that consists of the lines:
 
  =head1 REQUIRED MODULES      <- must start at beginning of line
@@ -193,6 +259,30 @@ above will be changed to:
  =(anything)                  <- any other pod directive
 
 No changes will be made if the marker text is not found.
+
+If no "pod" file specification is specified, then the file specified with the
+"VERSION_FROM" parameter of the call to C<WriteMakefile> will be assumed.
+
+=head1 SPECIFYING YOUR OWN FILES
+
+It is possible to specify which text and which pod files should be searched
+for the text markers and possibly updated.  The C<import> routine of
+Devel::Required takes a list of parameters, each pair of which is considered
+to be a key-value pair.  The following keys are recognized:
+
+=over 2
+
+=item text
+
+The value of this parameter is either the name of the text file to check, or
+a reference to a list with the names of one or more text files.
+
+=item pod
+
+The value of this parameter is either the name of a file containing pod to
+check, or a reference to a list withe the names of one or more files containing
+pod.
+
 
 =head1 REQUIRED MODULES
 
@@ -220,9 +310,12 @@ Please report bugs to <perlbugs@dijkmat.nl>.
 Castaway on Perl Monks for "complaining" about not mentioning prerequisite
 modules in the README or in the POD.
 
+Dan Browning for suggestion being able to specify which text and pod files
+should be changed.
+
 =head1 COPYRIGHT
 
-Copyright (c) 2003 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
+Copyright (c) 2003-2004 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
 reserved.  This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
