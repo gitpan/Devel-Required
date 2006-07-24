@@ -1,3 +1,10 @@
+0.07	24 July 2006
+	Brought up to Perl Best Practices standards.
+
+	Added VERSION support, which automatically updates the pod and
+	README files with the version information obtained from the generated
+	Makefile.
+
 0.06	8 february 2004
 	Adapted check in source test from \n to use $/.  Hopefully this should
 	solve the problems with Win32 platforms.

@@ -21,6 +21,8 @@ package $_;
 
 This is just an example module.
 
+=head1 VERSION
+
 =head1 REQUIRED MODULES
 
 =head1 COPYRIGHT
@@ -36,6 +38,9 @@ EOD
 ok( open( OUT,">README" ), "Failed to open README for writing: $!" );
 print OUT <<EOD;
 Sample README file
+
+Version:
+
 
 Required Modules:
 
@@ -57,6 +62,9 @@ ok( open( IN,"README" ), "Failed to open README for reading: $!" );
 is( do {local $/; <IN>},<<EOD, "Check if README conversion successful" );
 Sample README file
 
+Version:
+ 1.01
+
 Required Modules:
  Bar (1.0)
  Baz (any)
@@ -74,6 +82,10 @@ package Foo;
 =head1 SYNOPSIS
 
 This is just an example module.
+
+=head1 VERSION
+
+This documentation describes version 1.01.
 
 =head1 REQUIRED MODULES
 

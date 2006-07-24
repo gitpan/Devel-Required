@@ -2,7 +2,6 @@ MANIFEST
 CHANGELOG
 README
 TODO
-VERSION
 Makefile.PL
 lib/Devel/Required.pm
 t/Required01.t

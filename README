@@ -2,9 +2,12 @@ README for Devel::Required
 
 Automatic update of required modules documentation.
 
-Copyright (c) 2003-2004 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
+Copyright (c) 2003-2006 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
 reserved.  This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
+
+Version:
+ 0.07
 
 Required Modules:
  (none)

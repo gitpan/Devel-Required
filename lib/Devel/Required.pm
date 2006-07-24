@@ -1,77 +1,83 @@
 package Devel::Required;
 
-# Make sure we have version info for this module
-# Make sure we do everything by the book from now on
+# set version information
+$VERSION = '0.07';
 
-$VERSION = '0.06';
+# make sure we do everything by the book from now on
 use strict;
+use warnings;
 
-# Initialize the list with text-file conversion
-# Initialize the list with pod-file conversion
+# initializations
+my @TEXT;  # list with text-file conversion
+my @POD;   # list with pod-file conversion
 
-my @TEXT;
-my @POD;
-
-# While we're compiling
-#  Make sure we can redefine without problems
-#  Obtain the subroutine name
-#  Save the current subroutine
-#  Replace it by a subroutine which
-#   Executes the original subroutine with the original parameters first
-
+# replace WriteMakefile with our own copy
 BEGIN {
-    no warnings 'redefine'; no strict 'refs';
-    my $subname = caller().'::WriteMakefile';
+    no warnings 'redefine';
+    no strict 'refs';
+    my $subname = caller() . '::WriteMakefile';
     my $old = \&{$subname};
     *$subname = sub {
+
+        # perform the old sub with parameters
         $old->( @_ );
 
-#   Initialize pod filename to change
-#   Initialize the hash reference to the module info
-#   Initialize the text to replace
+        # initializations
+        my $pod;       # pod filename to change
+        my $modules;   # hash reference to the module info
+        my $required;  # required text to replace
+        my $version;   # version text to replace
 
-        my $pod;
-        my $modules;
-        my $text;
-
-#   While there are parameters to be processed
-#    Get the next key/value pair
-#    If it refers to the main module file
-#     Set that
-#    Elseif it is the required modules hash ref
-#     Set that
-
+        # each key and value pair passed to original WriteMakefile
         while (@_) {
-            my ($key,$value) = (shift,shift);
-            if ($key eq 'VERSION_FROM') {
+            my ( $key, $value ) = ( shift, shift );
+
+            # main module file
+            if ( $key eq 'VERSION_FROM' ) {
                 $pod = $value;
-            } elsif ($key eq 'PREREQ_PM') {
+            }
+
+            # required modules hash ref
+            elsif ($key eq 'PREREQ_PM') {
                 $modules = $value;
             }
+
+=for Explanation:
+     Anything we don't handle is simply ignored.
+
+=cut
+
         }
 
-#    Initialize the text to insert
-#    Make sure there is something there
+        # use E::M's logic to obtain version information
+        ($version) = _slurp('Makefile') =~ m#\nVERSION = (\d+\.\d+)#s;
 
-        $text = join( $/,
-         map {" $_ (".($modules->{$_} || 'any').")"}
-          sort {lc $a cmp lc $b} keys %{$modules} )
-           if $modules;
-        $text ||= " (none)";
+        # text to insert
+        $required = join $/,
+          map {" $_ (".($modules->{$_} || 'any').")"}
+          sort {lc $a cmp lc $b}
+           keys %{$modules}
+             if $modules;
+        $required ||= " (none)";
 
-#    For all of the text-files to convert
-#     Convert the text-file if there is one
-#    For all of the text-files to convert
-#     Convert the pod-file if there is one
-
-        foreach (@TEXT ? @TEXT : 'README') {
-            _convert( $_,"Required Modules:$/",$text,"$/$/" ) if -e;
+        # convert all text files that exist
+        foreach ( grep { -e } @TEXT ? @TEXT : 'README' ) {
+            _convert( $_, "Version:$/", " $version", "$/$/" )
+              if $version;
+            _convert( $_, "Required Modules:$/", $required, "$/$/" );
         }
-        foreach (@POD ? @POD : ($pod ? ($pod) : ())) {
-            _convert( $_,"=head1 REQUIRED MODULES$/","$/$text$/","$/=" ) if -e;
+
+        # convert all pod files that exist
+        foreach ( grep { -e } @POD ? @POD : ($pod ? ($pod) : () ) ) {
+            _convert(
+              $_,
+              "=head1 VERSION$/",
+              "$/This documentation describes version $version.$/", "$/="
+            ) if $version;
+            _convert( $_, "=head1 REQUIRED MODULES$/", "$/$required$/", "$/=" );
         }
     };
-} #BEGIN
+}    #BEGIN
 
 #---------------------------------------------------------------------------
 
@@ -83,28 +89,29 @@ BEGIN {
 
 sub import {
 
-# Lose the class
-# While there are parameters to be handled
-#  Obtain the type and value to set
-#  If it is a text-file to set
-#   Set that
-#  Elseif it is a text-file to set
-#   Set that
-#  Else (what?)
-#   Croak
-
+    # lose the class
     shift;
+
+    # for all key value pairs
     while (@_) {
-        my ($type,$file) = (shift,shift);
-        if ($type eq 'text') {
-            push @TEXT,ref( $file ) ? @{$file} : ($file);
-        } elsif ($type eq 'pod') {
-            push @POD,ref( $file ) ? @{$file} : ($file);
-        } else {
+        my ( $type, $file ) = ( shift, shift );
+
+        # set up text file processing
+        if ( $type eq 'text' ) {
+            push @TEXT, ref $file ? @{$file} : ($file);
+        }
+
+        # set up pod file processing
+        elsif ( $type eq 'pod' ) {
+            push @POD,ref $file ? @{$file} : ($file);
+        }
+
+        # huh?
+        else {
             die qq{Don't know how to handle "$type"\n};
         }
     }
-} #import
+}    #import
 
 #---------------------------------------------------------------------------
 
@@ -121,57 +128,78 @@ sub import {
 #      4 string to match with after
 
 sub _convert {
-
-# Obtain the parameters
-# Make sure we have a local copy of $_
-
-    my ($filename,$before,$text,$after) = @_;
+    my ( $filename, $before, $text, $after ) = @_;
     local $_;
 
-# If we can read the file
-#  Obtain the entire contents of the file
-#  Close the input handle
+=for Explanation:
+     We want to make sure that this also runs on pre 5.6 perl's, so we're
+     using old style open()
 
-    if (open( IN,$filename )) {
-        my $contents = $_ = do {local $/; <IN>};
-        close IN;
+=cut
 
-#  If we found and replaced the text and it's different now
-#   If there was no change (no action)
-#   Elseif we can open the file for writing
-#    Write the new contents in there
-#    Close the output handle, die if failed
-#    Check size is ok, die if failed
+    # there is something to process
+    if ( my $contents = $_ = _slurp($filename) ) {
 
-        if (s#$before(?:.*?)$after#$before$text$after#s) {
+        # found and replaced text
+        if ( s#$before(?:.*?)$after#$before$text$after#s ) {
+
+            # same as before (no action)
             if ($_ eq $contents) {
-            } elsif (open( OUT,">$filename" )) {
+            }
+
+            # successfully saved file with changes
+            elsif ( open( OUT, ">$filename" ) ) {
                 print OUT $_;
                 close OUT
                  or die qq{Problem flushing "$filename": $!\n};
                 die qq{Did not properly install "$filename"\n}
                  unless -s $filename == length;
+            }
 
-#   Else (could not open file for writing)
-#    Just warn
-#  Else (didn't find text marker)
-#   Just warn
-# Else (could not open file for reading)
-#  Just warn
-
-            } else {
+            # could not save file
+            else {
                 warn qq{Could not open "$filename" for writing: $!\n};
             }
-        } else {
-            warn qq{Could not find text marker in "$filename"\n};
         }
-    } else {
+
+        # couldn't replace
+        else {
+            $before =~ s#\s+$##s;
+            warn qq{Could not find text marker "$before" in "$filename"\n};
+        }
+    }
+}    #_convert
+
+#---------------------------------------------------------------------------
+# _slurp
+#
+# Return contents of given filename, a poor man's perl6 slurp().  Warns if
+# it could not open the specified file
+#
+#  IN: 1 filename
+# OUT: 1 file contents
+
+sub _slurp {
+    my ($filename) = @_;
+    my $contents;
+
+    # there is something to process
+    if ( open( IN, $filename ) ) {
+        $contents = do { local $/; <IN> };
+        close IN;
+    }
+
+    # couldn't read file
+    else {
         warn qq{Could not open "$filename" for reading: $!\n};
     }
-} #_convert
 
-# Satisfy -require-
+    return $contents;
+}    #_slurp
 
+#---------------------------------------------------------------------------
+
+# satisfy -require-
 1;
 
 #---------------------------------------------------------------------------
@@ -181,6 +209,10 @@ __END__
 =head1 NAME
 
 Devel::Required - Automatic update of required modules documentation
+
+=head1 VERSION
+
+This documentation describes version 0.07.
 
 =head1 SYNOPSIS
 
@@ -224,7 +256,11 @@ By default the following types of files will be changed:
 
 =item text file
 
-A text file should at least have this marker text:
+A text file should at least have one of these marker texts:
+
+ Version:                     <- must start at beginning of line
+                              <- empty line
+                              <- another empty line
 
  Required Modules:            <- must start at beginning of line
                               <- empty line
@@ -233,12 +269,16 @@ A text file should at least have this marker text:
 After Makefile.PL is executed (using the example of the L<SYNOPSIS>), the
 above will be changed to:
 
- Required Modules:            <- must start at beginning of line
-  Foo (1.0)                   <- added
-  Bar::Baz (0.05)             <- added
-                              <- empty line
+ Version:                                    <- must start at beginning of line
+  This documentation describes version #.##. <- added 
+                                             <- empty line
 
-No changes will be made if the marker text is not found.
+ Required Modules:                           <- must start at beginning of line
+  Foo (1.0)                                  <- added
+  Bar::Baz (0.05)                            <- added
+                                             <- empty line
+
+No changes will be made if none of the marker texts are not found.
 
 If no "text" file specification is specified, then the file "README" in the
 current directory will be assumed.
@@ -246,7 +286,11 @@ current directory will be assumed.
 =item pod file
 
 The pod file(s) that are (implicitely) specified, will be searched for
-a marker text that consists of the lines:
+any marker texts that consist of the lines:
+
+ =head1 VERSION               <- must start at beginning of line
+                              <- empty line
+ =(anything)                  <- any other pod directive
 
  =head1 REQUIRED MODULES      <- must start at beginning of line
                               <- empty line
@@ -255,17 +299,25 @@ a marker text that consists of the lines:
 After Makefile.PL is executed (using the example of the L<SYNOPSIS>, the
 above will be changed to:
 
- =head1 REQUIRED MODULES      <- must start at beginning of line
-                              <- empty line
-  Foo (1.0)                   <- added
-  Bar::Baz (0.05)             <- added
-                              <- empty line
- =(anything)                  <- any other pod directive
+ =head1 VERSION                              <- must start at beginning of line
+                                             <- empty line
+ This documentation describes version #.##.  <- added
+                                             <- added
+ =(anything)                                 <- any other pod directive
 
-No changes will be made if the marker text is not found.
+ =head1 REQUIRED MODULES                     <- must start at beginning of line
+                                             <- empty line
+  Foo (1.0)                                  <- added
+  Bar::Baz (0.05)                            <- added
+                                             <- added
+ =(anything)                                 <- any other pod directive
+
+No changes will be made if none of the marker texts are not found.
 
 If no "pod" file specification is specified, then the file specified with the
 "VERSION_FROM" parameter of the call to C<WriteMakefile> will be assumed.
+
+=back
 
 =head1 SPECIFYING YOUR OWN FILES
 
@@ -287,6 +339,7 @@ The value of this parameter is either the name of a file containing pod to
 check, or a reference to a list withe the names of one or more files containing
 pod.
 
+=back
 
 =head1 REQUIRED MODULES
 
@@ -302,6 +355,7 @@ modules from L<ExtUtils::MakeMaker> to L<Module::Build>.
 
 Loading this module steals the "WriteMakefile" subroutine of the calling
 package and inserts its own logic for updating the necessary text-files.
+The version information is read from the generated "Makefile".
 
 =head1 AUTHOR
 
@@ -319,7 +373,7 @@ should be changed.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2003-2004 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
+Copyright (c) 2003-2006 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
 reserved.  This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 

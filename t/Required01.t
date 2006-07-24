@@ -11,7 +11,6 @@ use_ok( 'ExtUtils::MakeMaker' );
 use_ok( 'Devel::Required' );
 can_ok( 'Devel::Required',qw(import) );
 
-
 foreach (qw(Foo Bar Baz)) {
     ok( open( OUT,">$_.pm" ), "Failed to open $_.pm: $!" );
     print OUT <<EOD;
@@ -21,6 +20,8 @@ package $_;
 =head1 SYNOPSIS
 
 This is just an example module.
+
+=head1 VERSION
 
 =head1 REQUIRED MODULES
 
@@ -38,6 +39,9 @@ ok( open( OUT,">README" ), "Failed to open README for writing: $!" );
 print OUT <<EOD;
 Sample README file
 
+Version:
+
+
 Required Modules:
 
 
@@ -53,10 +57,12 @@ WriteMakefile (
 );
 ok( -e 'Makefile', "Check if Makefile exists" );
 
-
 ok( open( IN,"README" ), "Failed to open README for reading: $!" );
 is( do {local $/; <IN>},<<EOD, "Check if README conversion successful" );
 Sample README file
+
+Version:
+ 1.01
 
 Required Modules:
  Bar (1.0)
@@ -75,6 +81,10 @@ package Foo;
 =head1 SYNOPSIS
 
 This is just an example module.
+
+=head1 VERSION
+
+This documentation describes version 1.01.
 
 =head1 REQUIRED MODULES
 
@@ -101,6 +111,9 @@ foreach (
     is( do {local $/; <IN>},<<EOD, "Check if README conversion successful" );
 Sample README file
 
+Version:
+ 1.01
+
 Required Modules:
  (none)
 
@@ -117,6 +130,10 @@ package Foo;
 =head1 SYNOPSIS
 
 This is just an example module.
+
+=head1 VERSION
+
+This documentation describes version 1.01.
 
 =head1 REQUIRED MODULES
 
