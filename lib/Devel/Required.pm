@@ -1,7 +1,7 @@
 package Devel::Required;
 
 # set version information
-$VERSION = '0.07';
+$VERSION = '0.08';
 
 # make sure we do everything by the book from now on
 use strict;
@@ -20,6 +20,7 @@ BEGIN {
     *$subname = sub {
 
         # perform the old sub with parameters
+        @_ = @_; # quick fix for brokennes in 5.9.5, as suggested by rgs
         $old->( @_ );
 
         # initializations
@@ -212,7 +213,7 @@ Devel::Required - Automatic update of required modules documentation
 
 =head1 VERSION
 
-This documentation describes version 0.07.
+This documentation describes version 0.08.
 
 =head1 SYNOPSIS
 
@@ -373,7 +374,7 @@ should be changed.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2003-2006 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
+Copyright (c) 2003-2007 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
 reserved.  This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
