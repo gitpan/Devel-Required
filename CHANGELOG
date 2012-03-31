@@ -1,5 +1,12 @@
+0.09	31 March 2012
+	Some more podfixes and made sure it runs with 5.14.2, threaded and
+	unthreaded.
+
+	7 August 2009
+	Brought up to 5.10.1, and to the latest coding esthetics insights.
+
 0.08	13 July 2007
-	Quick fix for problem showing up in 5.9.5,
+	Quick fix for problem showing up in 5.9.5.
 
 0.07	24 July 2006
 	Brought up to Perl Best Practices standards.

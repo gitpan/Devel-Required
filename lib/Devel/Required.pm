@@ -1,7 +1,7 @@
 package Devel::Required;
 
 # set version information
-$VERSION = '0.08';
+$VERSION= '0.09';
 
 # make sure we do everything by the book from now on
 use strict;
@@ -15,12 +15,12 @@ my @POD;   # list with pod-file conversion
 BEGIN {
     no warnings 'redefine';
     no strict 'refs';
-    my $subname = caller() . '::WriteMakefile';
-    my $old = \&{$subname};
-    *$subname = sub {
+    my $subname= caller() . '::WriteMakefile';
+    my $old= \&{$subname};
+    *$subname= sub {
 
         # perform the old sub with parameters
-        @_ = @_; # quick fix for brokennes in 5.9.5, as suggested by rgs
+        @_= @_; # quick fix for brokennes in 5.9.5, as suggested by rgs
         $old->( @_ );
 
         # initializations
@@ -31,16 +31,16 @@ BEGIN {
 
         # each key and value pair passed to original WriteMakefile
         while (@_) {
-            my ( $key, $value ) = ( shift, shift );
+            my ( $key, $value )= ( shift, shift );
 
             # main module file
             if ( $key eq 'VERSION_FROM' ) {
-                $pod = $value;
+                $pod= $value;
             }
 
             # required modules hash ref
             elsif ($key eq 'PREREQ_PM') {
-                $modules = $value;
+                $modules= $value;
             }
 
 =for Explanation:
@@ -51,10 +51,10 @@ BEGIN {
         }
 
         # use E::M's logic to obtain version information
-        ($version) = _slurp('Makefile') =~ m#\nVERSION = (\d+\.\d+)#s;
+        ($version)= _slurp('Makefile') =~ m#\nVERSION = (\d+\.\d+)#s;
 
         # text to insert
-        $required = join $/,
+        $required= join $/,
           map {" $_ (".($modules->{$_} || 'any').")"}
           sort {lc $a cmp lc $b}
            keys %{$modules}
@@ -95,7 +95,7 @@ sub import {
 
     # for all key value pairs
     while (@_) {
-        my ( $type, $file ) = ( shift, shift );
+        my ( $type, $file )= ( shift, shift );
 
         # set up text file processing
         if ( $type eq 'text' ) {
@@ -129,7 +129,7 @@ sub import {
 #      4 string to match with after
 
 sub _convert {
-    my ( $filename, $before, $text, $after ) = @_;
+    my ( $filename, $before, $text, $after )= @_;
     local $_;
 
 =for Explanation:
@@ -139,7 +139,7 @@ sub _convert {
 =cut
 
     # there is something to process
-    if ( my $contents = $_ = _slurp($filename) ) {
+    if ( my $contents= $_= _slurp($filename) ) {
 
         # found and replaced text
         if ( s#$before(?:.*?)$after#$before$text$after#s ) {
@@ -181,12 +181,12 @@ sub _convert {
 # OUT: 1 file contents
 
 sub _slurp {
-    my ($filename) = @_;
+    my ($filename)= @_;
     my $contents;
 
     # there is something to process
     if ( open( IN, $filename ) ) {
-        $contents = do { local $/; <IN> };
+        $contents= do { local $/; <IN> };
         close IN;
     }
 
@@ -209,11 +209,11 @@ __END__
 
 =head1 NAME
 
-Devel::Required - Automatic update of required modules documentation
+Devel::Required - automatic update of required modules documentation
 
 =head1 VERSION
 
-This documentation describes version 0.08.
+This documentation describes version 0.09.
 
 =head1 SYNOPSIS
 
@@ -346,12 +346,6 @@ pod.
 
  (none)
 
-=head1 TODO
-
-Support for Module::Build should be added.  Patches are welcome.  Probably
-will do this myself at some point in the future when I migrate all of my
-modules from L<ExtUtils::MakeMaker> to L<Module::Build>.
-
 =head1 THEORY OF OPERATION
 
 Loading this module steals the "WriteMakefile" subroutine of the calling
@@ -374,9 +368,9 @@ should be changed.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2003-2007 Elizabeth Mattijsen <liz@dijkmat.nl>. All rights
-reserved.  This program is free software; you can redistribute it and/or
-modify it under the same terms as Perl itself.
+Copyright (c) 2003, 2004, 2006, 2007, 2009, 2012 Elizabeth Mattijsen
+<liz@dijkmat.nl>.  All rights reserved.  This program is free software; you
+can redistribute it and/or modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
