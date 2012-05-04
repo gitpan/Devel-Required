@@ -1,7 +1,7 @@
 package Devel::Required;
 
 # set version information
-$VERSION= '0.09';
+$VERSION= '0.10';
 
 # make sure we do everything by the book from now on
 use strict;
@@ -61,15 +61,15 @@ BEGIN {
              if $modules;
         $required ||= " (none)";
 
-        # convert all text files that exist
-        foreach ( grep { -e } @TEXT ? @TEXT : 'README' ) {
+        # convert all text files that matter
+        foreach ( grep { -s } @TEXT ? @TEXT : 'README' ) {
             _convert( $_, "Version:$/", " $version", "$/$/" )
               if $version;
             _convert( $_, "Required Modules:$/", $required, "$/$/" );
         }
 
-        # convert all pod files that exist
-        foreach ( grep { -e } @POD ? @POD : ($pod ? ($pod) : () ) ) {
+        # convert all pod files that matter
+        foreach ( grep { -s } @POD ? @POD : ($pod ? ($pod) : () ) ) {
             _convert(
               $_,
               "=head1 VERSION$/",
@@ -80,11 +80,14 @@ BEGIN {
     };
 }    #BEGIN
 
-#---------------------------------------------------------------------------
+# satisfy -require-
+1;
 
+#-------------------------------------------------------------------------------
+#
 # Standard Perl features
-
-#---------------------------------------------------------------------------
+#
+#-------------------------------------------------------------------------------
 #  IN: 1 class (ignored)
 #      2..N key/value pairs
 
@@ -114,11 +117,11 @@ sub import {
     }
 }    #import
 
-#---------------------------------------------------------------------------
-
+#-------------------------------------------------------------------------------
+#
 # Internal subroutines
-
-#---------------------------------------------------------------------------
+#
+#-------------------------------------------------------------------------------
 # _convert
 #
 # Perform the indicated conversion on the specified file
@@ -171,7 +174,7 @@ sub _convert {
     }
 }    #_convert
 
-#---------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # _slurp
 #
 # Return contents of given filename, a poor man's perl6 slurp().  Warns if
@@ -198,12 +201,7 @@ sub _slurp {
     return $contents;
 }    #_slurp
 
-#---------------------------------------------------------------------------
-
-# satisfy -require-
-1;
-
-#---------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 __END__
 
@@ -213,7 +211,7 @@ Devel::Required - automatic update of required modules documentation
 
 =head1 VERSION
 
-This documentation describes version 0.09.
+This documentation describes version 0.10.
 
 =head1 SYNOPSIS
 
