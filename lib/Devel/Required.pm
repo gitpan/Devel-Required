@@ -1,15 +1,16 @@
 package Devel::Required;
 
 # set version information
-$VERSION= '0.11';
+$VERSION= '0.12';
 
 # make sure we do everything by the book from now on
 use strict;
 use warnings;
 
 # initializations
-my @TEXT;  # list with text-file conversion
-my @POD;   # list with pod-file conversion
+my @TEXT;         # list with text-file conversion
+my @POD;          # list with pod-file conversion
+my $INSTALLATION; # any installation information
 
 # replace WriteMakefile with our own copy
 BEGIN {
@@ -66,6 +67,8 @@ BEGIN {
             _convert( $_, "Version:$/", " $version", "$/$/" )
               if $version;
             _convert( $_, "Required Modules:$/", $required, "$/$/" );
+            _convert( $_, "Installation:$/", $INSTALLATION, "" )
+              if $INSTALLATION;
         }
 
         # convert all pod files that matter
@@ -73,12 +76,15 @@ BEGIN {
             _convert(
               $_,
               "=head1 VERSION$/",
-              "$/This documentation describes version $version.$/", "$/="
+              "$/This documentation describes version $version.$/",
+              "$/="
             ) if $version;
             _convert( $_, "=head1 REQUIRED MODULES$/", "$/$required$/", "$/=" );
+            _convert( $_, "=head1 INSTALLATION$/", "$/$INSTALLATION$/", "$/=")
+              if $INSTALLATION;
         }
     };
-}    #BEGIN
+} #BEGIN
 
 # satisfy -require-
 1;
@@ -98,16 +104,47 @@ sub import {
 
     # for all key value pairs
     while (@_) {
-        my ( $type, $file )= ( shift, shift );
+        my ( $type, $value )= ( shift, shift );
 
         # set up text file processing
         if ( $type eq 'text' ) {
-            push @TEXT, ref $file ? @{$file} : ($file);
+            push @TEXT, ref $value ? @{$value} : ($value);
         }
 
         # set up pod file processing
         elsif ( $type eq 'pod' ) {
-            push @POD,ref $file ? @{$file} : ($file);
+            push @POD,ref $value ? @{$value} : ($value);
+        }
+
+        # set up maint/blead installation information
+        elsif ( $type eq 'maint_blead' ) {
+            $INSTALLATION= <<"INSTALLATION";
+This distribution contains two versions of the code: one maintenance version
+for versions of perl < $value (known as 'maint'), and the version currently in
+development (known as 'blead').  The standard build for your perl version is:
+
+ perl Makefile.PL
+ make
+ make test
+ make install
+
+This will try to test and install the "blead" version of the code.  If the
+Perl version does not support the "blead" version, then the running of the
+Makefile.PL will *fail*.  In such a case, one can force the installing of
+the "maint" version of the code by doing:
+
+ perl Makefile.PL maint
+
+Alternately, if you want automatic selection behavior, you can set the
+AUTO_SELECT_MAINT_OR_BLEAD environment variable to a true value.  On Unix-like
+systems like so:
+
+ AUTO_SELECT_MAINT_OR_BLEAD=1 perl Makefile.PL
+
+If your perl does not support the "blead" version of the code, then it will
+automatically install the "maint" version of the code.
+INSTALLATION
+            chomp $INSTALLATION;
         }
 
         # huh?
@@ -115,7 +152,7 @@ sub import {
             die qq{Don't know how to handle "$type"\n};
         }
     }
-}    #import
+} #import
 
 #-------------------------------------------------------------------------------
 #
@@ -172,7 +209,7 @@ sub _convert {
             warn qq{Could not find text marker "$before" in "$filename"\n};
         }
     }
-}    #_convert
+} #_convert
 
 #-------------------------------------------------------------------------------
 # _slurp
@@ -199,7 +236,7 @@ sub _slurp {
     }
 
     return $contents;
-}    #_slurp
+} #_slurp
 
 #-------------------------------------------------------------------------------
 
@@ -211,7 +248,7 @@ Devel::Required - automatic update of required modules documentation
 
 =head1 VERSION
 
-This documentation describes version 0.11.
+This documentation describes version 0.12.
 
 =head1 SYNOPSIS
 
@@ -224,12 +261,20 @@ This documentation describes version 0.11.
  );
 
  use ExtUtils::MakeMaker; # specify which files should be checked
- eval "use Devel::Required text => 'INSTALL', pod => [qw(lib/Your/Module.pod)]"
+ eval <<"CODE";
+ use Devel::Required
+   text => 'INSTALL',
+   pod  => [ qw( lib/Your/Module.pod ) ],
+ ;
+ CODE
  WriteMakefile (
   NAME         => "Your::Module",
   VERSION_FROM => "lib/Your/Module.pm",
   PREREQ_PM    => { 'Foo' => '1.0', 'Bar::Baz' => '0.05' }
  );
+
+ use ExtUtils::MakeMaker; # specify maint / blead installation information
+ eval "use Devel::Required maint_blead => 5.014";
 
 =head1 DESCRIPTION
 
@@ -244,6 +289,9 @@ It takes the information given with the PREREQ_PM parameter and by default
 writes this to the README file, as well as to the POD of the file specified
 with the VERSION_FROM parameter.  Both these defaults can be overridden with
 the "text" and "pod" parameters in the C<use Devel::Required> specification.
+
+Optionally, it will also update installation information, specifically for
+distributions that have a C<maint> and C<blead> version internally.
 
 This module should B<only> be installed on the system of the developer.
 
@@ -265,6 +313,12 @@ A text file should at least have one of these marker texts:
                               <- empty line
                               <- another empty line
 
+Optionally it may have an "Installation:" marker:
+
+ Installation:                <- must start at beginning of line
+                              <- empty line
+                              <- another empty line
+
 After Makefile.PL is executed (using the example of the L<SYNOPSIS>), the
 above will be changed to:
 
@@ -272,10 +326,14 @@ above will be changed to:
   This documentation describes version #.##. <- added 
                                              <- empty line
 
- Required Modules:                           <- must start at beginning of line
-  Foo (1.0)                                  <- added
-  Bar::Baz (0.05)                            <- added
-                                             <- empty line
+ Required Modules:              <- must start at beginning of line
+  Foo (1.0)                     <- added
+  Bar::Baz (0.05)               <- added
+                                <- empty line
+
+ Installation:                  <- must start at beginning of line
+ (extensive installation info)  <- added
+                                <- empty line
 
 No changes will be made if none of the marker texts are not found.
 
@@ -295,6 +353,12 @@ any marker texts that consist of the lines:
                               <- empty line
  =(anything)                  <- any other pod directive
 
+Optionally it may have an "INSTALLATION" marker:
+
+ =head1 INSTALLATION          <- must start at beginning of line
+                              <- empty line
+ =(anything)                  <- any other pod directive
+
 After Makefile.PL is executed (using the example of the L<SYNOPSIS>, the
 above will be changed to:
 
@@ -308,6 +372,12 @@ above will be changed to:
                                              <- empty line
   Foo (1.0)                                  <- added
   Bar::Baz (0.05)                            <- added
+                                             <- added
+ =(anything)                                 <- any other pod directive
+
+ =head1 INSTALLATION                         <- must start at beginning of line
+                                             <- empty line
+ (extensive installation info)               <- added
                                              <- added
  =(anything)                                 <- any other pod directive
 
@@ -339,6 +409,18 @@ check, or a reference to a list withe the names of one or more files containing
 pod.
 
 =back
+
+=head1 ADDING MAINT / blead INSTALLATION INFORMATION
+
+ use Devel::Required maint_blead => $version;
+
+By specifying a version number with the <maint_blead> key, the text / pod
+files will be searched for an "Installation" marker.  The value should be
+the Perl version B<below> which the C<maint> version of the code should be
+installed.
+
+The actual installation text is more or less fixed, but may be adapted in
+the future to provide more clarity for developers and packagers.
 
 =head1 REQUIRED MODULES
 

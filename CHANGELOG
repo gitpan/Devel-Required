@@ -1,3 +1,11 @@
+0.12    31 May 2012
+        Added support for "maint_blead" parameter, so that we can automatically
+        add installation information for distributions that support a "maint"
+        and a "blead" version of the code.
+
+        Fixed error in tests for versions of perl / ExtUtils::MakeMaker that
+        would not leave test droppings (aka MYMETA.* files).
+
 0.11    30 May 2012
         Fixed some test droppings (MYMETA.* files weren't cleaned up).
 

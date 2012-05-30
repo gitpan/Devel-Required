@@ -1,21 +1,19 @@
----
-abstract: 'Automatic update of required modules documentation'
+--- #YAML:1.0
+name:               Devel-Required
+version:            0.12
+abstract:           Automatic update of required modules documentation
 author:
-  - 'Elizabeth Mattijsen (liz@dijkmat.nl)'
-build_requires:
-  ExtUtils::MakeMaker: 0
+    - Elizabeth Mattijsen (liz@dijkmat.nl)
+license:            perl
+distribution_type:  module
 configure_requires:
-  ExtUtils::MakeMaker: 0
-dynamic_config: 1
-generated_by: 'ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120630'
-license: perl
-meta-spec:
-  url: http://module-build.sourceforge.net/META-spec-v1.4.html
-  version: 1.4
-name: Devel-Required
+    ExtUtils::MakeMaker:  0
+requires:  {}
 no_index:
-  directory:
-    - t
-    - inc
-requires: {}
-version: 0.11
+    directory:
+        - t
+        - inc
+generated_by:       ExtUtils::MakeMaker version 6.48
+meta-spec:
+    url:      http://module-build.sourceforge.net/META-spec-v1.4.html
+    version:  1.4
