@@ -1,7 +1,7 @@
 package Devel::Required;
 
 # set version information
-$VERSION= '0.10';
+$VERSION= '0.11';
 
 # make sure we do everything by the book from now on
 use strict;
@@ -211,7 +211,7 @@ Devel::Required - automatic update of required modules documentation
 
 =head1 VERSION
 
-This documentation describes version 0.10.
+This documentation describes version 0.11.
 
 =head1 SYNOPSIS
 

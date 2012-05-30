@@ -10,8 +10,8 @@ use warnings;
 use ExtUtils::MakeMaker;
 use Devel::Required pod => 'Foo.pm', text => 'README';
 
-
-foreach (qw(Foo Bar Baz)) {
+my @modules= qw( Foo Bar Baz );
+foreach (@modules) {
     ok( open( OUT,">$_.pm" ), "Failed to open $_.pm: $!" );
     print OUT <<EOD;
 package $_;
@@ -99,8 +99,13 @@ More text.
 EOD
 ok( close IN, "Failed to close Foo.pm: $!" );
 
-my @file = (qw(README Makefile),map {"$_.pm"} qw(Foo Bar Baz));
-is( unlink( @file ),scalar @file, "Check if all files removed" );
+my @file = ( qw(
+ README
+ Makefile
+ MYMETA.json
+ MYMETA.yml
+), map { "$_.pm" } @modules );
+is( unlink(@file), scalar @file, "Check if all files removed" );
 1 while unlink @file; # multiversioned filesystems
 
 #-- errors ----------------------------------------------------------------
