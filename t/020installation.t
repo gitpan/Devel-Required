@@ -49,6 +49,7 @@ Required Modules:
 Installation:
 
 
+
 More text.
 EOD
 ok( close OUT, "Failed to close README for writing: $!" );
@@ -97,6 +98,7 @@ systems like so:
 
 If your perl does not support the "blead" version of the code, then it will
 automatically install the "maint" version of the code.
+
 
 More text.
 EOD

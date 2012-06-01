@@ -1,3 +1,7 @@
+0.13    1 June 2012
+        Fixed problem with "Installation:" in text files, that would keep
+        adding the text at each run.
+
 0.12    31 May 2012
         Added support for "maint_blead" parameter, so that we can automatically
         add installation information for distributions that support a "maint"

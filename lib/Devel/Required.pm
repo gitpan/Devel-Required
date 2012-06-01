@@ -1,7 +1,7 @@
 package Devel::Required;
 
 # set version information
-$VERSION= '0.12';
+$VERSION= '0.13';
 
 # make sure we do everything by the book from now on
 use strict;
@@ -67,7 +67,7 @@ BEGIN {
             _convert( $_, "Version:$/", " $version", "$/$/" )
               if $version;
             _convert( $_, "Required Modules:$/", $required, "$/$/" );
-            _convert( $_, "Installation:$/", $INSTALLATION, "" )
+            _convert( $_, "Installation:$/", $INSTALLATION, "$/$/$/" )
               if $INSTALLATION;
         }
 
@@ -248,7 +248,7 @@ Devel::Required - automatic update of required modules documentation
 
 =head1 VERSION
 
-This documentation describes version 0.12.
+This documentation describes version 0.13.
 
 =head1 SYNOPSIS
 
@@ -318,6 +318,7 @@ Optionally it may have an "Installation:" marker:
  Installation:                <- must start at beginning of line
                               <- empty line
                               <- another empty line
+                              <- yet another empty line
 
 After Makefile.PL is executed (using the example of the L<SYNOPSIS>), the
 above will be changed to:
@@ -334,6 +335,7 @@ above will be changed to:
  Installation:                  <- must start at beginning of line
  (extensive installation info)  <- added
                                 <- empty line
+                                <- another empty line
 
 No changes will be made if none of the marker texts are not found.
 
