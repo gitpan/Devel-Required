@@ -1,7 +1,7 @@
 package Devel::Required;
 
 # set version information
-$VERSION= '0.13';
+$VERSION= '0.14';
 
 # make sure we do everything by the book from now on
 use strict;
@@ -143,6 +143,9 @@ systems like so:
 
 If your perl does not support the "blead" version of the code, then it will
 automatically install the "maint" version of the code.
+
+Please note that any additional parameters will simply be passed on to the
+underlying Makefile.PL processing.
 INSTALLATION
             chomp $INSTALLATION;
         }
@@ -248,7 +251,7 @@ Devel::Required - automatic update of required modules documentation
 
 =head1 VERSION
 
-This documentation describes version 0.13.
+This documentation describes version 0.14.
 
 =head1 SYNOPSIS
 

@@ -99,6 +99,9 @@ systems like so:
 If your perl does not support the "blead" version of the code, then it will
 automatically install the "maint" version of the code.
 
+Please note that any additional parameters will simply be passed on to the
+underlying Makefile.PL processing.
+
 
 More text.
 EOD
@@ -148,6 +151,9 @@ systems like so:
 
 If your perl does not support the "blead" version of the code, then it will
 automatically install the "maint" version of the code.
+
+Please note that any additional parameters will simply be passed on to the
+underlying Makefile.PL processing.
 
 =head1 COPYRIGHT
 
